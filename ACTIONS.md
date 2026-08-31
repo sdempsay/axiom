@@ -2,6 +2,7 @@
 
 ## 2026-08-31
 
+- Bumped `axiom-plugin` submodule to master after C1 (#1/#2) and C2 (#3) landed. Next plugin work is embed/harvest ([plugin#4](https://github.com/sdempsay/axiom-plugin/issues/4)).
 - Adopted review-pipeline hybrid tracker: `TODO.md` index + GitHub Issues. Cross-cutting issues on sdempsay/axiom; plugin T1–T4 on axiom-plugin; MCP T5–T10/T16 on axiom-mcp; T12c on agentic-review-tool#6.
 - Wired GitHub remotes: [sdempsay/axiom](https://github.com/sdempsay/axiom) umbrella with submodules [axiom-plugin](https://github.com/sdempsay/axiom-plugin) and [axiom-mcp](https://github.com/sdempsay/axiom-mcp).
 - Pinned Exceptional examples and PRD GAVs to 1.0.9.
