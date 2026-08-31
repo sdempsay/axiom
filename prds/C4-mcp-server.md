@@ -180,7 +180,7 @@ Agent-facing result (conceptual):
 id: external_failure
 severity: required
 use: org.dempsay.utils.exceptional.api.ExceptionalSupplier.of
-artifact: org.dempsay.utils:exceptional:1.0.7
+artifact: org.dempsay.utils:exceptional:1.0.9
 snippet:
   final ExceptionalResponse<Data> response = ExceptionalSupplier.of(() -> fetchData())
       .execute();

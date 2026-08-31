@@ -26,7 +26,7 @@ schemaVersion: 1
 artifact:
   groupId: org.dempsay.utils
   artifactId: exceptional
-  version: "1.0.7"    # filled by plugin if omitted
+  version: "1.0.9"    # filled by plugin if omitted
 owner:
   repo: sdempsay/exceptional-java
   contact: library-owners

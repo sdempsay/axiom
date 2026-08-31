@@ -26,3 +26,4 @@ Requirements learned while reconciling the original zip with this org. Canonical
 | U20 | This repo dogfoods `code-review` (agentic-review-tool) on every Java/`pom.xml` commit via a pre-commit hook (`code-review diff --staged`). Missing tool fails the commit. `SKIP_CODE_REVIEW=1` is an explicit bypass. |
 | U21 | Patterns found while building Axiom feed review-pipeline **rules**, not one-off essays. A later CLI extension is `--fail-on REQUEST_CHANGES` so hooks need not parse Markdown. |
 | U22 | After M3 (lookup works), **this repo is the first Axiom consumer** (dispatcher + `axiom catalog add` Exceptional). Org-wide C6/C7/C8 stay later. |
+| U23 | First-catalog Exceptional version is **1.0.9** (was 1.0.7 in the original zip). |

@@ -2,7 +2,7 @@ schemaVersion: 1
 artifact:
   groupId: org.dempsay.utils
   artifactId: exceptional
-  version: "1.0.7"
+  version: "1.0.9"
 owner:
   repo: sdempsay/exceptional-java
 intents:

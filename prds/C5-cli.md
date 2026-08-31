@@ -56,7 +56,7 @@ axiom validate path/to/catalog.yaml
 **API:**
 
 ```text
-axiom catalog add org.dempsay.utils:exceptional:1.0.7
+axiom catalog add org.dempsay.utils:exceptional:1.0.9
 axiom catalog remove org.dempsay.utils:exceptional
 ```
 
@@ -113,7 +113,7 @@ axiom-mcp/cli/src/main/java/org/dempsay/axiom/cli/
 ## Example Usage
 
 ```bash
-axiom catalog add org.dempsay.utils:exceptional:1.0.7
+axiom catalog add org.dempsay.utils:exceptional:1.0.9
 axiom lookup "IOException in a service method"
 axiom get external_failure
 ```

@@ -52,7 +52,7 @@ axiom lint-diff --data ~/.axiom --diff changes.diff --format gitlab
 Axiom: this diff matches **external_failure** (`required`).
 
 Use `org.dempsay.utils.exceptional.api.ExceptionalSupplier.of`
-(`org.dempsay.utils:exceptional:1.0.7`).
+(`org.dempsay.utils:exceptional:1.0.9`).
 
 ```java
 final ExceptionalResponse<Data> response = ExceptionalSupplier.of(() -> fetchData())

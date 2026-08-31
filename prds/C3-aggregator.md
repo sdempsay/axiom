@@ -22,11 +22,11 @@ HTTP, MCP, and CLI all read one merged view built from catalogs the operator (or
 POST /catalogs
 Content-Type: application/json
 
-{"groupId":"org.dempsay.utils","artifactId":"exceptional","version":"1.0.7"}
+{"groupId":"org.dempsay.utils","artifactId":"exceptional","version":"1.0.9"}
 ```
 
 ```text
-axiom catalog add org.dempsay.utils:exceptional:1.0.7
+axiom catalog add org.dempsay.utils:exceptional:1.0.9
 ```
 
 **Behavior:**
@@ -71,7 +71,7 @@ schemaVersion: 1
 generatedAt: "2026-08-31T17:00:00Z"
 intents:
   - id: external_failure
-    artifact: { groupId: org.dempsay.utils, artifactId: exceptional, version: "1.0.7" }
+    artifact: { groupId: org.dempsay.utils, artifactId: exceptional, version: "1.0.9" }
     ...
 aliases:
   file_read_optional: file_to_optional_string
@@ -129,7 +129,7 @@ axiom-mcp/ingest/src/main/java/org/dempsay/axiom/mcp/ingest/
 ## Example Usage
 
 ```bash
-axiom catalog add org.dempsay.utils:exceptional:1.0.7
+axiom catalog add org.dempsay.utils:exceptional:1.0.9
 axiom lookup "IOException in a service method"
 axiom catalog remove org.dempsay.utils:exceptional
 ```

@@ -2,6 +2,7 @@
 
 ## 2026-08-31
 
+- Pinned Exceptional examples and PRD GAVs to 1.0.9.
 - Recorded dogfood requirements: pre-commit `code-review` on Java/POM now; this repo is the first Axiom consumer after M3 lookup. Hook lives in `hooks/pre-commit`; `bin/install-hooks` sets `core.hooksPath`.
 
 
