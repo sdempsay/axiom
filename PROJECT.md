@@ -92,6 +92,11 @@ Each item has its own PRD under `prds/`. Pilot is C1–C5 and the local-file sli
 | C8 | Required detectors | later | no |
 | C9 | Gap workflow | axiom-mcp | yes (local files only) |
 
+## Dogfood
+
+- **code-review (now).** Every Java/`pom.xml` commit in this tree is reviewed by `code-review diff --staged` (pre-commit hook). Findings here should extend [agentic-review-tool](https://github.com/sdempsay/agentic-review-tool) rules, not rot as one-off comments.
+- **Axiom (after lookup works).** This umbrella and `axiom-plugin` / `axiom-mcp` are the first consuming repos. Dispatcher text lands here as soon as `axiom lookup` / MCP returns `external_failure`. Org-wide C6 stays later.
+
 ## Coordinates
 
 ```text

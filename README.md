@@ -19,3 +19,8 @@ This repository (`sdempsay/axiom`) is the umbrella: product definition and cross
 | [axiom-mcp/](axiom-mcp/) | `sdempsay/axiom-mcp` | Live catalog service (HTTP + MCP + CLI) |
 
 Start with `PROJECT.md`, then `PLAN.md`, then the PRD for the component you are building.
+
+## Dogfood
+
+- **Now:** `bin/install-hooks` — pre-commit runs `code-review diff --staged` on Java / `pom.xml` (see [AGENTS.md](AGENTS.md)).
+- **After M3:** this repo is the first Axiom consumer (`axiom lookup` / MCP against catalogs we publish).

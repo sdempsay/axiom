@@ -15,7 +15,10 @@
 | T10 | C9: `catalog_gap` writes local files | pending |
 | T11 | M4: Exceptional `catalog.yaml` + plugin + CI POST | pending |
 | T12 | Promote `axiom-plugin` and `axiom-mcp` to real GitHub remotes + submodules | pending |
-| T13 | C6 consumer dispatcher | deferred |
+| T12a | Pre-commit `code-review` dogfood on Java/POM | complete |
+| T12b | M3.5: dispatcher + catalog lookup in this repo (first Axiom consumer) | pending |
+| T12c | Extend code-review with `--fail-on REQUEST_CHANGES` (review-pipeline) | pending |
+| T13 | C6 consumer dispatcher (org-wide) | deferred |
 | T14 | C7 GitLab lint-diff | deferred |
 | T15 | C8 required detectors | deferred |
 | T16 | C9 GitHub issues for gaps; write-API auth | deferred |

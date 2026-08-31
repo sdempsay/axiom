@@ -2,7 +2,7 @@
 
 ## Project: Axiom C6 — Consumer dispatcher
 
-**Status: deferred.** Not in the pilot. Kept so the 15-line contract is not invented later from memory.
+**Status: deferred for other repos.** This umbrella dogfoods the dispatcher as soon as `axiom-mcp` lookup works (PLAN M3.5). Org-wide rollout stays later.
 
 ## Overview
 

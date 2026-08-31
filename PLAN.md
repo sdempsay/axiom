@@ -94,6 +94,15 @@ Until the GitHub component remotes exist, `axiom-plugin/` and `axiom-mcp/` are o
 
 **Exit:** from this laptop, add `org.dempsay.utils:exceptional` once that GAV has a catalog (or a fixture GAV) and `axiom lookup "IOException"` returns `external_failure`.
 
+### M3.5 — Dogfood this repo
+
+- Install dispatcher text in this umbrella `AGENTS.md` (C6, here only).
+- `axiom catalog add` Exceptional (and, when published, axiom-plugin’s own catalog if it has intents).
+- Agents in this repo call `catalog_lookup` before writing helpers.
+- Keep the `code-review` pre-commit hook; it does not replace lookup.
+
+**Exit:** one recorded session in this repo where lookup happens before a helper is written.
+
 ### M4 — Exceptional onboards
 
 - Add `catalog.yaml` + snippets to `sdempsay/exceptional-java`.
@@ -148,4 +157,5 @@ Do not staff a “knowledge graph team” until lookup is in daily use.
 - `axiom-mcp` runs on a single host, add/remove by GAV, lookup via HTTP/MCP/CLI.
 - Exceptional publishes `external_failure` with `of`+`execute` as the primary snippet.
 - Gaps persist as local files.
-- C6–C8 are explicitly later, not half-built.
+- C6–C8 are later for other repos; this repo dogfoods C6 as soon as lookup works.
+- Java commits go through `code-review` pre-commit.
