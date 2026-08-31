@@ -1,0 +1,6 @@
+[submodule "axiom-plugin"]
+	path = axiom-plugin
+	url = https://github.com/sdempsay/axiom-plugin.git
+[submodule "axiom-mcp"]
+	path = axiom-mcp
+	url = https://github.com/sdempsay/axiom-mcp.git

@@ -27,3 +27,4 @@ Requirements learned while reconciling the original zip with this org. Canonical
 | U21 | Patterns found while building Axiom feed review-pipeline **rules**, not one-off essays. A later CLI extension is `--fail-on REQUEST_CHANGES` so hooks need not parse Markdown. |
 | U22 | After M3 (lookup works), **this repo is the first Axiom consumer** (dispatcher + `axiom catalog add` Exceptional). Org-wide C6/C7/C8 stay later. |
 | U23 | First-catalog Exceptional version is **1.0.9** (was 1.0.7 in the original zip). |
+| U24 | GitHub remotes: https://github.com/sdempsay/axiom (umbrella), https://github.com/sdempsay/axiom-plugin, https://github.com/sdempsay/axiom-mcp. |

@@ -2,7 +2,13 @@
 
 Org catalog of **intents → blessed implementations → detectors** for humans and coding agents.
 
-This repository (`sdempsay/axiom`) is the umbrella: product definition and cross-cutting docs. Implementation lives in two component repos, attached here as git submodules.
+This repository ([sdempsay/axiom](https://github.com/sdempsay/axiom)) is the umbrella: product definition and cross-cutting docs. Implementation lives in two component repos, attached here as git submodules.
+
+```bash
+git clone --recurse-submodules https://github.com/sdempsay/axiom.git
+# existing clone:
+git submodule update --init --recursive
+```
 
 | Document | What it is |
 |---|---|
