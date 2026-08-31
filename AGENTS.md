@@ -53,6 +53,10 @@ code-review diff --base origin/master --no-chat
 
 When `axiom lookup` / MCP works, **this umbrella and its submodules are the first consuming repos** — dispatcher text in `AGENTS.md` here. Tracked as [axiom#2](https://github.com/sdempsay/axiom/issues/2). Until then, do not pretend catalog lookup exists.
 
+## Javadoc `@since`
+
+First public release is **1.0.0**. New types and methods use `@since 1.0.0`, not `0.1.0` and not the Maven SNAPSHOT version.
+
 ## Exceptional
 
 Java I/O and external calls in `axiom-plugin` / `axiom-mcp` use `ExceptionalSupplier.of(...).execute()` and `wasError()` / `response()`. `chain` / `then` for composing failing work. No business `try/catch` on those paths.

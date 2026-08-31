@@ -30,3 +30,4 @@ Requirements learned while reconciling the original zip with this org. Canonical
 | U24 | GitHub remotes: https://github.com/sdempsay/axiom (umbrella), https://github.com/sdempsay/axiom-plugin, https://github.com/sdempsay/axiom-mcp. |
 | U25 | Hybrid backlog (same as review-pipeline): GitHub Issues hold AC; `TODO.md` is a thin index. **Cross-cutting issues on sdempsay/axiom. Plugin issues on axiom-plugin. MCP issues on axiom-mcp.** |
 | U26 | Official MCP Java SDK: do not depend on `io.modelcontextprotocol.sdk:mcp` (Jackson 3). Use `mcp-core` + `mcp-json-jackson2` so Jackson stays 2.x (`2.18.2`). HTTP in the pilot is JDK `HttpServer`. |
+| U27 | First public release of Axiom artifacts is **1.0.0**. Javadoc `@since` is `1.0.0`, not `0.1.0` and not the Maven SNAPSHOT version. |
