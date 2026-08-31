@@ -2,9 +2,11 @@
 
 ## Project: Axiom C8 — Required detectors
 
+**Status: deferred.** Not in the pilot. Stronger than MR comments; only after lookup and (later) lint-diff comments are trusted.
+
 ## Overview
 
-Compile-time or static-analysis checks in the parent POM for `severity: required` intents. Stronger than MR comments. Smaller set.
+Compile-time or static-analysis checks in the parent POM for `severity: required` intents.
 
 ## Purpose
 
@@ -18,23 +20,22 @@ Make a vernacular `try/catch` or banned helper a failed `mvn verify` in applicat
 
 ```xml
 <dependency>
-  <groupId>org.axiom</groupId>
+  <groupId>org.dempsay.axiom</groupId>
   <artifactId>axiom-detectors</artifactId>
-  <version>1.0.0-SNAPSHOT</version>
   <optional>true</optional>
 </dependency>
 ```
 
 **Behavior:**
 - Ships Checkstyle module and/or Error Prone checkers generated from, or kept in sync with, required anti-patterns.
-- v1 may be hand-written checkers bound to named intent ids. Generation from YAML is allowed later.
+- v1 may be hand-written checkers bound to named intent ids.
 
 ### FR2: First checker — external_failure
 
 **API:**
 
 ```text
-org.axiom.detectors.NoExternalCatchCheck
+org.dempsay.axiom.detectors.NoExternalCatchCheck
 ```
 
 **Behavior:**
@@ -45,26 +46,14 @@ org.axiom.detectors.NoExternalCatchCheck
 
 ### FR3: Parent POM wiring
 
-**API:**
-
-```xml
-<!-- company-parent -->
-<plugin>
-  <groupId>org.apache.maven.plugins</groupId>
-  <artifactId>maven-checkstyle-plugin</artifactId>
-  ...
-</plugin>
-```
-
 **Behavior:**
-- Company parent enables the check for modules that are not in an allowlist property `axiom.detectors.skip`.
-- Library modules that own the blessed API set `axiom.detectors.skip=true` or package excludes.
+- `dempsay-parent` (or an opt-in profile) enables the check for modules that are not in `axiom.detectors.skip`.
+- Library modules that own the blessed API set skip or package excludes.
 
 ### FR4: Additional checkers
 
 **Behavior:**
 - Second checker only after the first has a known false-positive rate.
-- Candidates: `Files.readAllBytes` / `Files.readString` → `file_to_optional_string`; homemade MAC regex → `normalize_mac`.
 - Each checker maps to exactly one intent id.
 
 ### FR5: Suppression
@@ -82,7 +71,7 @@ org.axiom.detectors.NoExternalCatchCheck
 ## Non-Functional Requirements
 
 ### NFR1: Java
-- Java 21. Checkstyle version matches company parent.
+- Java 21. Checkstyle version matches `dempsay-parent`.
 - Error Prone optional; do not require it if the parent does not already run it.
 
 ### NFR2: Scope
@@ -95,13 +84,9 @@ org.axiom.detectors.NoExternalCatchCheck
 ## Package Structure
 
 ```text
-detectors/src/main/java/org/axiom/detectors/
+detectors/src/main/java/org/dempsay/axiom/detectors/   # later
 ├── NoExternalCatchCheck.java
 └── IntentMessage.java
-
-detectors/src/test/resources/
-├── catch-io.bad.java
-└── exceptional-use.good.java
 ```
 
 ## Test Coverage
@@ -128,7 +113,10 @@ try {
 Good:
 
 ```java
-var response = ExceptionalSupplier.of(() -> Files2.readOptional(path).orElseThrow())
-    .with(ex -> log.warn("read failed", ex))
+final ExceptionalResponse<String> response = ExceptionalSupplier.of(() -> Files.readString(path))
     .execute();
+if (response.wasError()) {
+    return null;
+}
+return response.response();
 ```

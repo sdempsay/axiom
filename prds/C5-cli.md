@@ -4,11 +4,11 @@
 
 ## Overview
 
-Command-line interface over the same model and index as the MCP server. Used by humans, CI jobs, and agents that cannot speak MCP.
+Command-line interface in `sdempsay/axiom-mcp` over the same model and local store as the HTTP/MCP server. Used by humans, library CI, and agents that cannot speak MCP.
 
 ## Purpose
 
-Make lookup and validation possible in a terminal, a GitLab job, and a devcontainer without an MCP client.
+Make lookup, add/remove, validation, and gap filing possible in a terminal without an MCP client.
 
 ## Functional Requirements
 
@@ -21,45 +21,26 @@ axiom <command> [options]
 ```
 
 **Behavior:**
-- Distributed as `org.axiom:axiom-cli` (executable jar) and documented as `axiom` on PATH in the devcontainer image.
-- `--index` default: `AXIOM_INDEX` env, then `./.axiom/index.yaml`, then the org pages URL baked at build time.
+- Distributed from `org.dempsay.axiom:axiom-mcp` (executable jar) and documented as `axiom` on PATH.
+- Talks to the local data dir by default (`AXIOM_DATA` / `~/.axiom`).
+- `--url` optional: call a running HTTP server instead of opening the store directly. Pilot may use either; same results.
 
-### FR2: lookup
+### FR2: lookup / search / get
 
 **API:**
 
 ```text
 axiom lookup "read file to optional string" [--language java] [--limit 3] [--json]
-```
-
-**Behavior:**
-- Same ranking as MCP `catalog_lookup`.
-- Human output: id, severity, symbol, GAV, snippet.
-- `--json` prints the intent records.
-
-### FR3: search
-
-**API:**
-
-```text
 axiom search mac [--json]
-```
-
-**Behavior:**
-- Same as MCP `catalog_search`. Table output by default.
-
-### FR4: get
-
-**API:**
-
-```text
 axiom get external_failure
 ```
 
 **Behavior:**
-- Exact id or alias. Exit 1 if missing.
+- Same ranking and payloads as the MCP tools.
+- Human output: id, severity, symbol, GAV, primary snippet.
+- `get` is exact id or alias. Exit 1 if missing.
 
-### FR5: validate
+### FR3: validate
 
 **API:**
 
@@ -68,20 +49,21 @@ axiom validate path/to/catalog.yaml
 ```
 
 **Behavior:**
-- C1 validation. Used by the Maven plugin tests and by library owners before push.
+- C1 validation via `axiom-model`. Used by library owners before push. Does not require a running server.
 
-### FR6: aggregate
+### FR4: catalog add / remove
 
 **API:**
 
 ```text
-axiom aggregate --sources aggregator-sources.yaml --out index.yaml
+axiom catalog add org.dempsay.utils:exceptional:1.0.7
+axiom catalog remove org.dempsay.utils:exceptional
 ```
 
 **Behavior:**
-- Delegates to C3. Same process as the aggregator module; CLI is the user-facing entry.
+- Delegates to C3. Same process as HTTP.
 
-### FR7: gap
+### FR5: gap
 
 **API:**
 
@@ -90,44 +72,32 @@ axiom gap --job "..." --attempted "..." --repo team/service
 ```
 
 **Behavior:**
-- Same as MCP `catalog_gap`.
-
-### FR8: cache
-
-**API:**
-
-```text
-axiom cache refresh
-axiom cache path
-```
-
-**Behavior:**
-- Downloads `index.yaml` to `~/.axiom/index.yaml` or `$AXIOM_CACHE`.
-- CI jobs call `refresh` once per pipeline.
+- Same as MCP `catalog_gap` (local file).
 
 ## Non-Functional Requirements
 
 ### NFR1: Runtime
-- Java 21. Picocli. Shares `axiom-model`.
+- Java 21. Picocli. Shares `axiom-model` and C3 ingest.
 
 ### NFR2: Exit codes
 - 0 success, 1 user/data error, 2 usage error.
 
 ### NFR3: Offline
-- `lookup`, `search`, `get`, `validate` work offline if `--index` is a local file.
+- `lookup`, `search`, `get`, `validate` work against `--data` with no network if catalogs are already stored.
+- `catalog add` needs Maven Resolver network unless the artifact is already in the local repo.
 
 ## Package Structure
 
 ```text
-cli/src/main/java/org/axiom/cli/
+axiom-mcp/cli/src/main/java/org/dempsay/axiom/cli/
 ├── AxiomMain.java
 ├── LookupCommand.java
 ├── SearchCommand.java
 ├── GetCommand.java
 ├── ValidateCommand.java
-├── AggregateCommand.java
-├── GapCommand.java
-└── CacheCommand.java
+├── CatalogAddCommand.java
+├── CatalogRemoveCommand.java
+└── GapCommand.java
 ```
 
 ## Test Coverage
@@ -135,7 +105,7 @@ cli/src/main/java/org/axiom/cli/
 1. **LookupCommandTest**
    - `printsSnippet()`
    - `jsonMode()`
-   - `missingIndexExitsOne()`
+   - `emptyStoreExitsZeroWithHint()`
 
 2. **ValidateCommandTest**
    - `invalidYamlExitsOne()`
@@ -143,7 +113,7 @@ cli/src/main/java/org/axiom/cli/
 ## Example Usage
 
 ```bash
-axiom cache refresh
+axiom catalog add org.dempsay.utils:exceptional:1.0.7
 axiom lookup "IOException in a service method"
 axiom get external_failure
 ```

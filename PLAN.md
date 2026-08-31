@@ -2,197 +2,150 @@
 
 ## Project
 
-Axiom catalog, MCP server, Maven plugin, and org rollout.
+Axiom catalog plugin, live MCP/HTTP service, and Exceptional as the first published catalog.
 
 ## Purpose
 
-Build in slices that can ship to one commons library and a few consuming repos before involving all 60 repositories.
+Ship a plugin that attaches a catalog to a library jar, and a single-host service that ingests those catalogs and answers lookup. Do not involve consumer CI or detectors until lookup works.
 
 ## Principles
 
 - Schema first. Nothing else is stable until `catalog.yaml` validates.
-- One library onboarded end-to-end before a second library.
-- Agents get MCP and CLI in the same increment. Humans get the same index on GitLab pages.
-- No merge gate until lint-diff comments are accurate for two weeks.
-- Dispatcher text is a template, not a per-repo essay.
+- One library onboarded end-to-end before a second library (Exceptional).
+- Library POMs depend on the **plugin**, never on `axiom-mcp`.
+- `axiom-mcp` is a live process from the start (HTTP + MCP + CLI, local files).
+- No merge gate, lint-diff, or dispatcher in the pilot.
+- Dispatcher/CI/detectors stay written as PRDs so they are not forgotten.
 
-## Repos to create
+## Repos
 
 | Repo | Contains | First milestone |
 |---|---|---|
-| `platform/axiom` | Schema, plugin, aggregator, CLI, MCP, CI include, detectors | M1–M3 |
-| `platform/axiom-catalog` | Aggregated `index.yaml`, pages, gap issues | M3 |
-| Existing commons library | First `catalog.yaml` + examples | M2 |
-| 2–3 consuming services | Dispatcher + CI include | M4 |
+| `sdempsay/axiom` | Docs, PRDs, this plan; git submodules | M0 |
+| `sdempsay/axiom-plugin` | Schema, model, annotations, Maven plugin | M1–M2 |
+| `sdempsay/axiom-mcp` | Ingest/merge, HTTP+MCP server, CLI, local store, gaps | M3 |
+| `sdempsay/exceptional-java` | First `catalog.yaml` + examples + CI POST | M4 |
 
-Monorepo `platform/axiom` is acceptable for M1–M5. Split artifacts by Maven module, not by git repo, until a second team owns a piece.
-
-## Module layout (`platform/axiom`)
+Umbrella layout:
 
 ```text
-axiom/
+axiom/                          # sdempsay/axiom
 ├── PROJECT.md
 ├── PLAN.md
 ├── prds/
-├── schema/                 # JSON Schema + example catalog.yaml
-├── plugin/                 # axiom-maven-plugin
-├── model/                  # shared Java model for catalog records
-├── aggregator/
-├── cli/
-├── mcp/
-├── gitlab-ci/              # include.yml + lint-diff
-├── detectors/
-└── dispatcher/             # AGENTS.md / CLAUDE.md templates
+├── axiom-plugin/               # submodule → sdempsay/axiom-plugin
+│   ├── schema/
+│   ├── model/
+│   ├── annotations/
+│   └── plugin/
+└── axiom-mcp/                  # submodule → sdempsay/axiom-mcp
+    ├── server/                 # HTTP + MCP
+    ├── ingest/
+    └── cli/
 ```
+
+Until the GitHub component remotes exist, `axiom-plugin/` and `axiom-mcp/` are ordinary directories that will become submodules.
 
 ## Phases
 
-### M0 — Decide coordinates and owners (days, not weeks)
+### M0 — Coordinates and owners (done in interview)
 
-- Pick `groupId`, GitLab group, and who may approve `severity: required`.
-- Pick the first library (the commons with 176 methods, or Exceptional if that is a faster slice).
-- Pick two consuming repos that already get “use the library” review comments.
-- Record agent tools in use (OpenCode, Claude Code, other). MCP must support all of them or CLI is the fallback.
+- groupId `org.dempsay.axiom`; parent `org.dempsay.maven:dempsay-parent`; Java 21.
+- Umbrella `sdempsay/axiom`; components `axiom-plugin` and `axiom-mcp`.
+- First library: Exceptional. Blessed snippet: `of` + `execute` + `wasError`/`response()`; `chain`/`then` as a second example.
+- Service: live, local files, no auth, add/remove by Maven GAV, run on a single dev host.
+- GitLab CI include, detectors, dispatcher: later.
 
-**Exit:** written owners, first-library choice, two consumer repos.
+**Exit:** this document matches the interview. Layout sketched on disk.
 
 ### M1 — Schema and model
 
 **PRD:** [C1 Catalog schema](prds/C1-catalog-schema.md)
 
-- JSON Schema for `catalog.yaml`.
-- Java model in `axiom-model` (intent, symbol, GAV, triggers, anti-patterns, severity, snippet ref, version).
-- Validator CLI command `axiom validate path/to/catalog.yaml`.
-- Three example records: `external_failure`, `file_to_optional_string`, `normalize_mac`.
+- JSON Schema for `catalog.yaml` in `axiom-plugin`.
+- Java model `org.dempsay.axiom:axiom-model`.
+- Validator used by the plugin and by `axiom validate`.
+- Example records for `external_failure` (primary + chain snippets).
 
-**Exit:** a catalog file that fails on missing intent id, missing blessed symbol, or duplicate ids inside one file.
+**Exit:** a catalog file fails on missing intent id, missing blessed symbol, duplicate ids, missing snippet file, or invalid regex.
 
-### M2 — Maven plugin on one library
+### M2 — Maven plugin
 
 **PRD:** [C2 Maven catalog plugin](prds/C2-maven-plugin.md)
 
-- Plugin reads `src/main/resources/agent-catalog/catalog.yaml` and optional `@AgentCapability` annotations.
-- Validates against C1.
-- Attaches `catalog.yaml` as a classified artifact (`classifier=agent-catalog`, type `yaml`) and/or writes `META-INF/axiom/catalog.yaml` into the main jar.
-- Fails the library build on invalid catalog.
-- Adds `examples/` as resources next to the catalog.
+- Plugin reads `src/main/resources/agent-catalog/catalog.yaml`.
+- Validates against C1, stamps `${project.version}`.
+- Attaches `classifier=agent-catalog`, type `yaml`.
+- Embeds `META-INF/axiom/catalog.yaml` in the main jar (default).
+- Optional `@AgentCapability` harvest off by default.
 
-**Exit:** the first library’s `mvn verify` publishes a catalog next to the jar. Exceptional or the commons library has ≤ 20 intents, not 176.
+**Exit:** `mvn verify` on a fixture module publishes a catalog next to the jar. Exceptional is not required to be converted in this phase, but the fixture looks like Exceptional.
 
-### M3 — Aggregator and human index
+### M3 — Live axiom-mcp
 
-**PRD:** [C3 Aggregator](prds/C3-aggregator.md)
+**PRDs:** [C3](prds/C3-aggregator.md), [C4](prds/C4-mcp-server.md), [C5](prds/C5-cli.md), [C9](prds/C9-gap-workflow.md) (local files)
 
-- Job reads the org BOM or a configured list of GAVs.
-- Fetches each `agent-catalog` artifact.
-- Merges to `index.yaml`.
-- Fails on duplicate intent ids across artifacts.
-- Publishes `index.yaml` to `platform/axiom-catalog` and a generated pages site (intent table + snippet).
+- One process: HTTP API + MCP transport + CLI against local files.
+- `POST` a Maven GAV → fetch `classifier=agent-catalog` via Maven Resolver → store on disk → merge into the in-memory/on-disk index.
+- `DELETE` a library from the index.
+- Lookup / search / get.
+- `catalog_gap` writes a gap file under the data dir.
+- No auth. Data dir on the machine that runs the process (`~/.axiom` or configured).
 
-**Exit:** a developer can open pages and see the three pilot intents with snippets and coordinates.
+**Exit:** from this laptop, add `org.dempsay.utils:exceptional` once that GAV has a catalog (or a fixture GAV) and `axiom lookup "IOException"` returns `external_failure`.
 
-### M4 — CLI + dispatcher in consuming repos
+### M4 — Exceptional onboards
 
-**PRDs:** [C5 CLI](prds/C5-cli.md), [C6 Consumer dispatcher](prds/C6-dispatcher.md)
+- Add `catalog.yaml` + snippets to `sdempsay/exceptional-java`.
+- Bind `axiom-maven-plugin` with `required=true`.
+- After deploy, CI POSTs the GAV to the local (or agreed) `axiom-mcp` URL.
+- Intents: `external_failure` only unless more are already obvious. Cap remains ≤ 20.
 
-- CLI: `axiom lookup "read file to optional"`, `axiom search mac`, `axiom validate`.
-- CLI reads local cache of `index.yaml` (git submodule, package, or HTTP from pages).
-- Dispatcher paragraph dropped into consuming `AGENTS.md` and `CLAUDE.md` via template.
-- Archetype / repo template updated so new repos are born with the dispatcher.
+**Exit:** Exceptional’s `mvn verify` publishes the catalog; a POST (or CLI add) makes lookup work without a hand-copied YAML on the server.
 
-**Exit:** a human or agent in a consumer repo can resolve `external_failure` to the Exceptional snippet without opening GitHub.
+### M5+ — Later (PRDs exist, do not build now)
 
-### M5 — MCP server
-
-**PRD:** [C4 MCP server](prds/C4-mcp-server.md)
-
-- Tools: `catalog_lookup`, `catalog_search`, `catalog_gap`.
-- Same model and index as the CLI. No second database.
-- Document MCP config for Claude Code and OpenCode.
-- If a team cannot run MCP, CLI remains sufficient.
-
-**Exit:** one recorded agent session where lookup happens *before* a helper is written.
-
-### M6 — GitLab lint-diff
-
-**PRD:** [C7 GitLab lint-diff](prds/C7-gitlab-lint-diff.md)
-
-- Shared CI include.
-- On MR, scan changed files for anti-pattern strings / regex from `severity: required` and `available` rows.
-- Note on the MR: intent id, blessed symbol, snippet, GAV.
-- `available` → comment. `required` → comment only in M6 (no job failure yet).
-
-**Exit:** two weeks of comments on the pilot consumers. False-positive rate known.
-
-### M7 — Required detectors
-
-**PRD:** [C8 Required detectors](prds/C8-detectors.md)
-
-- Parent POM optional profile or always-on checks for the small required set.
-- First detector: vernacular `catch (IOException` / `catch (SQLException` in application packages.
-- Second detector only after the first is trusted (file-read or MAC).
-- `required` lint-diff job may now fail the pipeline.
-
-**Exit:** a known-bad MR cannot merge without an allowlist note.
-
-### M8 — Gap workflow
-
-**PRD:** [C9 Gap workflow](prds/C9-gap-workflow.md)
-
-- `axiom gap` and MCP `catalog_gap` open an issue in `platform/axiom-catalog`.
-- Issue template: job, what the agent/human wrote, searches tried, owning-repo guess.
-- Promotion rule: search or test evidence required before a new intent row merges.
-
-**Exit:** at least one miss from a real MR becomes a catalog row instead of a local util.
-
-### M9 — Roll out past the pilot
-
-- Onboard the next two libraries by intent frequency in review comments, not by method count.
-- Add dispatcher + CI include to the Maven archetype and to a GitLab push rule or compliance pipeline as warning-only.
-- Do not bulk-import 60 catalogs. Invite owners when they next touch the library.
+- C6 dispatcher text in consuming `AGENTS.md`.
+- C7 GitLab lint-diff for private GitLab apps.
+- C8 parent-POM detectors for `severity: required`.
+- C9 GitHub issues instead of (or in addition to) local gap files.
+- Auth on write APIs.
+- Second library.
 
 ## Order of implementation work
 
 ```text
-C1 schema
-  → C2 plugin (needs C1)
-  → C3 aggregator (needs C2 publishes)
-      → C5 CLI (needs C3 index)
-      → C6 dispatcher (can start in parallel with C5; needs wording only)
-      → C4 MCP (same index as C5)
-          → C7 lint-diff (needs index + anti-patterns)
-              → C8 detectors (needs trusted anti-patterns)
-              → C9 gap (needs MCP/CLI + issue project)
+C1 schema (axiom-plugin)
+  → C2 plugin (axiom-plugin)
+  → C3 ingest/merge + C4 HTTP/MCP + C5 CLI + C9 local gaps (axiom-mcp)
+      → M4 Exceptional catalog + CI POST
+          → C6 / C7 / C8 later
 ```
-
-C6 dispatcher text can be drafted on day one and copied into the two consumer repos as soon as lookup works.
 
 ## Staffing (minimum)
 
 | Role | Time | Owns |
 |---|---|---|
-| One engineer | M1–M5 | schema, plugin, aggregator, CLI, MCP |
-| Library owner (first catalog) | M2 | intent clustering, snippets from tests |
-| Consumer volunteer | M4–M7 | dispatcher, CI include, false-positive reports |
-| Platform approver | M0, M7, M8 | required severity, duplicate intent disputes |
+| One engineer | M1–M4 | plugin, service, Exceptional catalog |
+| Exceptional owner | M4 | intent + snippets from real tests |
 
-Do not staff a “knowledge graph team” until M5 is in daily use.
+Do not staff a “knowledge graph team” until lookup is in daily use.
 
 ## Risks
 
 | Risk | Mitigation |
 |---|---|
-| Catalog tries to list every method | Cap first library at 20 intents; leftover is “search first” |
-| Agents ignore dispatcher again | lint-diff + detectors; dispatcher is necessary but not sufficient |
-| Duplicate facts across repos | aggregator fails the merge; one owner per intent id |
-| Stale snippets | catalog ships with the artifact version; aggregator uses BOM versions |
-| MCP not adopted | CLI + CI comments still work |
-| Merge gate too early | comments only until two-week false-positive review |
+| Catalog tries to list every method | Cap Exceptional at a handful of intents; leftover is “search first” |
+| Library depends on the MCP service | Plugin only in the library POM; service fetches GAVs |
+| Open write API abused | Pilot is a single host; add a token before sharing |
+| Local files lost | Data dir is the store; operator backs it up or re-adds GAVs |
+| Agents ignore lookup | Later: dispatcher + lint-diff + detectors |
+| Maven Resolver confused with Aether persistence | Docs say “Maven Resolver”, never “Aether” |
 
 ## Definition of done for the pilot
 
-- First library publishes ≤ 20 intents including `external_failure`.
-- Aggregated index is visible to humans (pages) and machines (CLI + MCP).
-- Two consuming repos have the dispatcher and lint-diff.
-- One required detector exists or is scheduled immediately after comment quality is accepted.
-- Gap issues have a template and an owner.
+- `axiom-plugin` validates and attaches `agent-catalog`.
+- `axiom-mcp` runs on a single host, add/remove by GAV, lookup via HTTP/MCP/CLI.
+- Exceptional publishes `external_failure` with `of`+`execute` as the primary snippet.
+- Gaps persist as local files.
+- C6–C8 are explicitly later, not half-built.

@@ -6,9 +6,11 @@
 
 Maven plugin that validates a module’s `catalog.yaml`, stamps the project version, optionally harvests `@AgentCapability` annotations, and attaches the catalog to the build.
 
+Lives in `sdempsay/axiom-plugin`. Libraries depend on this plugin. They do **not** depend on `axiom-mcp`.
+
 ## Purpose
 
-Library owners keep the catalog next to source. The plugin makes an invalid catalog a failed `mvn verify`, and makes a valid catalog a published artifact consumers and the aggregator can fetch.
+Library owners keep the catalog next to source. The plugin makes an invalid catalog a failed `mvn verify`, and makes a valid catalog a published Maven artifact (`classifier=agent-catalog`) that `axiom-mcp` can fetch by GAV.
 
 ## Functional Requirements
 
@@ -23,7 +25,7 @@ src/main/resources/agent-catalog/examples/
 
 **Behavior:**
 - Plugin looks here unless `catalogFile` is set.
-- Missing file: skip with `INFO` unless `required=true` (default `false` for unmarked modules, `true` when the plugin is bound in a library that opted in).
+- Missing file: skip with `INFO` unless `required=true` (default `false` for unmarked modules, `true` when a library has opted in).
 
 ### FR2: Validate and stamp
 
@@ -31,7 +33,7 @@ src/main/resources/agent-catalog/examples/
 
 ```xml
 <plugin>
-  <groupId>org.axiom</groupId>
+  <groupId>org.dempsay.axiom</groupId>
   <artifactId>axiom-maven-plugin</artifactId>
   <executions>
     <execution>
@@ -44,7 +46,7 @@ src/main/resources/agent-catalog/examples/
 ```
 
 **Behavior:**
-- Reads catalog, validates against C1 schema.
+- Reads catalog, validates against C1 schema via `axiom-model`.
 - Writes `artifact.version` from `${project.version}` when absent or when `stampVersion=true` (default true).
 - Fails the build on validation error.
 
@@ -61,6 +63,8 @@ ${project.groupId}:${project.artifactId}:${project.version}:yaml:agent-catalog
 - Also copies stamped YAML to `META-INF/axiom/catalog.yaml` in the main jar when `embedInJar=true` (default true).
 - Copies referenced example files next to the classified artifact in a zip classifier `agent-catalog-examples` when examples exist.
 
+The plugin does not POST to `axiom-mcp`. Library CI does that after deploy (see C3).
+
 ### FR4: Optional annotation harvest
 
 **API:**
@@ -76,8 +80,8 @@ public static Optional<String> readOptional(Path path) { ... }
 ```
 
 **Behavior:**
-- Annotation lives in `org.axiom.annotations` (`provided` or a tiny `axiom-annotations` jar).
-- Harvest runs only when `harvestAnnotations=true`.
+- Annotation lives in `org.dempsay.axiom.annotations` (`provided`, artifact `axiom-annotations`).
+- Harvest runs only when `harvestAnnotations=true` (default false).
 - Harvested rows merge with YAML. YAML wins on field conflict.
 - Harvest does not invent snippets. `snippetRef` must still exist in YAML or the build fails for that intent.
 
@@ -111,10 +115,11 @@ target/axiom/report.md
 
 ### NFR1: Maven
 - Maven 3.8+. Java 21.
+- Parent: `org.dempsay.maven:dempsay-parent`.
 - Bind default execution to `process-resources` or `prepare-package` so `verify` sees the attached artifact.
 
 ### NFR2: Dependencies
-- Uses `axiom-model` for parse/validate. No network calls.
+- Uses `axiom-model` for parse/validate. No network calls. No dependency on `axiom-mcp`.
 
 ### NFR3: Idempotence
 - Re-running the goal with the same inputs produces byte-stable YAML field order (plugin writes via the model serializer).
@@ -122,14 +127,14 @@ target/axiom/report.md
 ## Package Structure
 
 ```text
-plugin/src/main/java/org/axiom/maven/
-├── CatalogMojo.java
-├── AnnotationHarvester.java
-└── CatalogWriter.java
-
-annotations/src/main/java/org/axiom/annotations/
-├── AgentCapability.java
-└── Severity.java
+axiom-plugin/
+├── plugin/src/main/java/org/dempsay/axiom/plugin/
+│   ├── CatalogMojo.java
+│   ├── AnnotationHarvester.java
+│   └── CatalogWriter.java
+└── annotations/src/main/java/org/dempsay/axiom/annotations/
+    ├── AgentCapability.java
+    └── Severity.java
 ```
 
 ## Test Coverage
@@ -148,18 +153,4 @@ annotations/src/main/java/org/axiom/annotations/
 
 ## Example Usage
 
-```xml
-<plugin>
-  <groupId>org.axiom</groupId>
-  <artifactId>axiom-maven-plugin</artifactId>
-  <version>1.0.0-SNAPSHOT</version>
-  <executions>
-    <execution>
-      <goals><goal>catalog</goal></goals>
-      <configuration>
-        <required>true</required>
-      </configuration>
-    </execution>
-  </executions>
-</plugin>
-```
+Exceptional (M4) binds the plugin with `required=true`. Until then, plugin tests use a fixture that looks like Exceptional.

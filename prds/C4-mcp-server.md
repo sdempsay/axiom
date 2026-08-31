@@ -1,14 +1,16 @@
 # Product Requirements Document (PRD)
 
-## Project: Axiom C4 — MCP server
+## Project: Axiom C4 — HTTP + MCP server
 
 ## Overview
 
-MCP server that exposes the aggregated index as tools for coding agents. Same records as the CLI. No separate store.
+One process in `sdempsay/axiom-mcp` that exposes the merged index over HTTP and MCP. Same records as the CLI. Local files are the store (C3). MCP is another transport on this app, not a second binary.
+
+Pilot runs on a single dev host. No authentication.
 
 ## Purpose
 
-Let Claude Code, OpenCode, and any other MCP client resolve an intent and file a gap without scraping `AGENTS.md` or GitHub.
+Let coding agents (Grok, Claude Code, OpenCode) and humans resolve an intent, add/remove a library by GAV, and file a gap without scraping `AGENTS.md`.
 
 ## Functional Requirements
 
@@ -16,22 +18,27 @@ Let Claude Code, OpenCode, and any other MCP client resolve an intent and file a
 
 **API:**
 
+```text
+axiom-mcp --data ~/.axiom --bind 127.0.0.1:8741
+```
+
 ```json
 {
   "mcpServers": {
     "axiom": {
       "command": "axiom-mcp",
-      "args": ["--index", "/opt/axiom/index.yaml"]
+      "args": ["--data", "/Users/shawn/.axiom", "--stdio"]
     }
   }
 }
 ```
 
 **Behavior:**
-- Stdio MCP server.
-- `--index` is a file path or HTTP(S) URL to `index.yaml`.
-- On start, load index into memory. Refuse to start if the file is missing or invalid.
-- `--reload-interval` optional; default no auto-reload. SIGHUP or process restart picks up a new index.
+- Default: HTTP server on localhost plus optional stdio MCP in the same process (`--stdio`).
+- `--data` is the C3 data dir. Created if missing.
+- On start, load catalogs from disk and merge. Empty store is valid (lookup returns no hits).
+- Refuse to start if the data dir is not writable.
+- `--reload-interval` optional; default no auto-reload. Writes (add/remove/gap) update disk and memory immediately.
 
 ### FR2: catalog_lookup
 
@@ -41,17 +48,21 @@ Let Claude Code, OpenCode, and any other MCP client resolve an intent and file a
 {
   "name": "catalog_lookup",
   "arguments": {
-    "query": "read a file into an optional string",
+    "query": "handle IOException in a service",
     "language": "java",
     "limit": 3
   }
 }
 ```
 
+```http
+GET /lookup?q=handle+IOException&language=java&limit=3
+```
+
 **Behavior:**
 - Matches `query` against intent `id`, `title`, `triggers`, `blessed.symbol`.
 - Filters by `language` when provided.
-- Returns 0..`limit` intents (default 3) with: id, title, severity, blessed, GAV, snippet text, antiPatterns, never.
+- Returns 0..`limit` intents (default 3) with: id, title, severity, blessed, GAV, primary snippet text, secondary snippets if present, antiPatterns, never.
 - Empty result is a valid response, not an error. Include a `hint` to call `catalog_search` or `catalog_gap`.
 
 ### FR3: catalog_search
@@ -61,10 +72,7 @@ Let Claude Code, OpenCode, and any other MCP client resolve an intent and file a
 ```json
 {
   "name": "catalog_search",
-  "arguments": {
-    "query": "mac",
-    "limit": 10
-  }
+  "arguments": { "query": "mac", "limit": 10 }
 }
 ```
 
@@ -73,7 +81,26 @@ Let Claude Code, OpenCode, and any other MCP client resolve an intent and file a
 - Each hit includes id, title, severity, GAV, score.
 - Does not include full snippet unless `includeSnippet: true`.
 
-### FR4: catalog_gap
+### FR4: catalog_get
+
+**API:**
+
+```json
+{
+  "name": "catalog_get",
+  "arguments": { "id": "external_failure" }
+}
+```
+
+**Behavior:**
+- Exact id or alias lookup.
+- Unknown id → error payload with nearby ids from search, not an empty success.
+
+### FR5: catalog add / remove
+
+MCP tools `catalog_add` and `catalog_remove` call C3 FR1 / FR3. HTTP routes are defined there. No auth in the pilot.
+
+### FR6: catalog_gap
 
 **API:**
 
@@ -91,25 +118,10 @@ Let Claude Code, OpenCode, and any other MCP client resolve an intent and file a
 
 **Behavior:**
 - Validates required `job`.
-- When GitLab token and project are configured, opens an issue using the C9 template and returns the issue URL.
-- When not configured, returns a filled markdown issue body for the agent to show the human.
+- Writes a YAML/markdown file under `$AXIOM_DATA/gaps/` (C9).
+- Returns the file path. Does not open a GitHub issue in the pilot.
 
-### FR5: catalog_get
-
-**API:**
-
-```json
-{
-  "name": "catalog_get",
-  "arguments": { "id": "external_failure" }
-}
-```
-
-**Behavior:**
-- Exact id or alias lookup.
-- Unknown id → error payload with nearby ids from search, not an empty success.
-
-### FR6: Tool descriptions
+### FR7: Tool descriptions
 
 **Behavior:**
 - Each tool description states: call `catalog_lookup` before writing a helper, try/catch for I/O, or a new `*Util` class.
@@ -118,26 +130,29 @@ Let Claude Code, OpenCode, and any other MCP client resolve an intent and file a
 ## Non-Functional Requirements
 
 ### NFR1: Runtime
-- Java 21. Official MCP Java SDK or equivalent stdio transport.
-- Shares `axiom-model` with CLI.
+- Java 21. Parent `dempsay-parent`. Official MCP Java SDK or equivalent for stdio; HTTP is the same app.
+- Shares `axiom-model` with the plugin.
 
 ### NFR2: Latency
 - `catalog_lookup` against a 500-intent in-memory index returns in under 50ms after load.
 
 ### NFR3: Secrets
-- GitLab token only from env `AXIOM_GITLAB_TOKEN`. Never logged.
+- Pilot has no tokens. When auth is added later, never log the token.
 
 ### NFR4: Compatibility
-- Documented client configs for Claude Code and OpenCode in `mcp/README.md`.
+- Documented client configs for Claude Code, Grok, and OpenCode in `axiom-mcp/README.md`.
 
 ## Package Structure
 
 ```text
-mcp/src/main/java/org/axiom/mcp/
-├── AxiomMcpServer.java
+axiom-mcp/server/src/main/java/org/dempsay/axiom/mcp/
+├── AxiomServer.java
+├── HttpApi.java
 ├── LookupTool.java
 ├── SearchTool.java
 ├── GetTool.java
+├── AddTool.java
+├── RemoveTool.java
 └── GapTool.java
 ```
 
@@ -151,7 +166,11 @@ mcp/src/main/java/org/axiom/mcp/
 
 2. **GapToolTest**
    - `missingJobFails()`
-   - `withoutTokenReturnsMarkdownBody()`
+   - `writesGapFile()`
+
+3. **HttpApiTest**
+   - `postGavAddsCatalog()`
+   - `deleteRemovesCatalog()`
 
 ## Example Usage
 
@@ -163,7 +182,6 @@ severity: required
 use: org.dempsay.utils.exceptional.api.ExceptionalSupplier.of
 artifact: org.dempsay.utils:exceptional:1.0.7
 snippet:
-  var response = ExceptionalSupplier.of(() -> fetchData())
-      .with(ex -> log.warn("fetch failed", ex))
+  final ExceptionalResponse<Data> response = ExceptionalSupplier.of(() -> fetchData())
       .execute();
 ```

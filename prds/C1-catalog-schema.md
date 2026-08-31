@@ -4,7 +4,9 @@
 
 ## Overview
 
-Canonical record format for an intent fact. Every other Axiom component reads or writes this format. A catalog file belongs to one artifact. The org index is a merge of catalog files.
+Canonical record format for an intent fact. Every other Axiom component reads or writes this format. A catalog file belongs to one artifact. The live index on `axiom-mcp` is a merge of catalog files.
+
+Lives in `sdempsay/axiom-plugin`.
 
 ## Purpose
 
@@ -26,7 +28,7 @@ artifact:
   artifactId: exceptional
   version: "1.0.7"    # filled by plugin if omitted
 owner:
-  repo: platform/exceptional-java
+  repo: sdempsay/exceptional-java
   contact: library-owners
 intents:
   - id: external_failure
@@ -39,6 +41,7 @@ intents:
 - `artifact.version` may be omitted in source; the plugin writes the project version at build time.
 - `intents` must contain at least one entry.
 - Intent `id` values must be unique inside the file.
+- `owner.repo` is a GitHub `owner/name` (Exceptional is public GitHub). Private GitLab libraries may use `group/project` in the same field later.
 
 ### FR2: Intent record
 
@@ -52,7 +55,12 @@ language: java
 blessed:
   symbol: org.dempsay.utils.exceptional.api.ExceptionalSupplier.of
   kind: method              # method | type | package
-snippetRef: examples/ExceptionalSupplier.java
+snippetRef: exceptional/ExceptionalSupplier.java
+snippets:
+  - ref: exceptional/ExceptionalSupplier.java
+    role: primary
+  - ref: exceptional/ExceptionalSupplierChain.java
+    role: secondary
 triggers:
   - IOException
   - SQLException
@@ -72,11 +80,13 @@ docs:
 
 **Behavior:**
 - `id` is kebab-or-snake stable across versions. Changing meaning requires a new id and `supersedes`.
-- `severity: required` means consumers may fail CI. `available` means prefer, do not fail.
+- `severity: required` means consumers may fail CI later. `available` means prefer, do not fail. Pilot does not fail consumer builds.
 - `blessed.symbol` is the primary entry point, not every overload.
-- `snippetRef` is a path relative to the catalog file. The snippet must compile against the declared artifact version.
+- `snippetRef` is the primary snippet, path relative to the catalog file. Required.
+- `snippets` is optional. When present, exactly one `role: primary` must match `snippetRef`. A second `role: secondary` is allowed for `chain`/`then` on `external_failure`.
+- The snippet must compile against the declared artifact version.
 - `triggers` are plain-language and token hints for lookup, not detectors.
-- `antiPatterns.pattern` is a regex applied to source text by lint-diff and detectors.
+- `antiPatterns.pattern` is a regex applied to source text by later lint-diff and detectors.
 - `never` is human/agent guidance. It is not a detector.
 - `docs` are optional cold links. Lookup must not require following them.
 
@@ -90,7 +100,7 @@ supersedes: [file_read_optional]
 ```
 
 **Behavior:**
-- Aggregator treats superseded ids as aliases for lookup.
+- Merge treats superseded ids as aliases for lookup.
 - New writes must use the current id.
 
 ### FR4: Snippet file
@@ -98,17 +108,24 @@ supersedes: [file_read_optional]
 **API:**
 
 ```java
-// examples/ExceptionalSupplier.java
-var response = ExceptionalSupplier.of(() -> fetchData())
-    .with(ex -> log.warn("fetch failed", ex))
+// exceptional/ExceptionalSupplier.java  (primary)
+final ExceptionalResponse<Data> response = ExceptionalSupplier.of(() -> fetchData())
     .execute();
-if (response.wasNoError()) {
-    return response.response();
+if (response.wasError()) {
+    return fallback();
 }
+return response.response();
+```
+
+```java
+// exceptional/ExceptionalSupplierChain.java  (secondary)
+return load(path)
+    .chain((listener, result) -> enrich(result), listener);
 ```
 
 **Behavior:**
-- One primary snippet per intent.
+- One primary snippet per intent. `external_failure` also has a secondary chain example.
+- Primary must be `ExceptionalSupplier.of(...).execute()` plus `wasError()` / `response()` at the call site. Do not teach `.with(...)` as the default.
 - No surrounding class required. Lint tools that need a compilation unit may wrap it in tests, not in the snippet file.
 - Snippet is the object an agent is expected to copy.
 
@@ -121,15 +138,16 @@ axiom validate src/main/resources/agent-catalog/catalog.yaml
 ```
 
 **Behavior:**
-- Exit 0 if schema-valid, ids unique, every `snippetRef` exists, every `antiPatterns.pattern` compiles as a regex.
+- Exit 0 if schema-valid, ids unique, every snippet ref exists, every `antiPatterns.pattern` compiles as a regex.
 - Exit 1 otherwise. Print the failing intent id and field.
+- CLI lives in `axiom-mcp` but calls `axiom-model`. Plugin tests may call the model directly.
 
 ### FR6: JSON Schema publication
 
 **API:**
 
 ```text
-schema/axiom-catalog-1.json
+axiom-plugin/schema/axiom-catalog-1.json
 ```
 
 **Behavior:**
@@ -147,18 +165,21 @@ schema/axiom-catalog-1.json
 - No field is a substitute for Javadoc of the full type.
 
 ### NFR3: Stability
-- Intent ids are immutable after the first aggregated release.
+- Intent ids are immutable after the first time they are ingested by `axiom-mcp`.
 - Additive fields are allowed in `schemaVersion: 1` if they are optional.
 
 ## Package Structure
 
 ```text
-schema/
-├── axiom-catalog-1.json
-├── examples/
-│   ├── exceptional.catalog.yaml
-│   └── exceptional/
-│       └── ExceptionalSupplier.java
+axiom-plugin/
+├── schema/
+│   ├── axiom-catalog-1.json
+│   └── examples/
+│       ├── exceptional.catalog.yaml
+│       └── exceptional/
+│           ├── ExceptionalSupplier.java
+│           └── ExceptionalSupplierChain.java
+├── model/src/main/java/org/dempsay/axiom/model/
 └── README.md
 ```
 
@@ -173,30 +194,9 @@ schema/
 
 2. **SchemaExampleTest**
    - `exceptionalExampleValidates()`
-   - `fileOptionalExampleValidates()`
-   - `macNormalizeExampleValidates()`
+   - `primarySnippetIsOfExecute()`
+   - `secondaryChainSnippetOptional()`
 
 ## Example Usage
 
-```yaml
-schemaVersion: 1
-artifact:
-  groupId: org.dempsay.utils
-  artifactId: exceptional
-intents:
-  - id: external_failure
-    title: Handle external / unrecoverable failure
-    severity: required
-    language: java
-    blessed:
-      symbol: org.dempsay.utils.exceptional.api.ExceptionalSupplier.of
-      kind: method
-    snippetRef: examples/ExceptionalSupplier.java
-    triggers: [IOException, SQLException, "external I/O"]
-    antiPatterns:
-      - pattern: "catch\\s*\\(\\s*(IOException|SQLException)"
-        message: Use Exceptional, do not catch checked external exceptions
-    never:
-      - NullPointerException
-      - domain exceptions
-```
+See `axiom-plugin/schema/examples/exceptional.catalog.yaml`.

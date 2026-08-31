@@ -2,6 +2,8 @@
 
 ## Project: Axiom C7 — GitLab lint-diff
 
+**Status: deferred.** Not in the pilot. Private consuming apps may live on GitLab while Axiom itself is public GitHub. This job is how GitLab MRs get “we already have this” without relying on the agent.
+
 ## Overview
 
 Shared GitLab CI include that scans MR diffs for catalog anti-patterns and comments the blessed snippet. First enforcement mechanism that does not rely on the agent reading the dispatcher.
@@ -19,21 +21,22 @@ Move “we already have this” from human review to an automated note on the me
 ```yaml
 # consumer .gitlab-ci.yml
 include:
-  - project: platform/axiom
+  - project: <later>
     file: gitlab-ci/axiom-lint.yml
 ```
 
 **Behavior:**
 - Defines job `axiom-lint-diff`.
 - Runs on merge request pipelines.
-- Needs `CI_MERGE_REQUEST_DIFF` or equivalent: changed files in the MR, not the whole tree.
+- Needs changed files in the MR, not the whole tree.
+- Index comes from `axiom-mcp` HTTP or a cached export; not from a GitLab `axiom-catalog` project (that repo does not exist).
 
 ### FR2: Scan
 
 **API:**
 
 ```text
-axiom lint-diff --index index.yaml --diff changes.diff --format gitlab
+axiom lint-diff --data ~/.axiom --diff changes.diff --format gitlab
 ```
 
 **Behavior:**
@@ -52,8 +55,7 @@ Use `org.dempsay.utils.exceptional.api.ExceptionalSupplier.of`
 (`org.dempsay.utils:exceptional:1.0.7`).
 
 ```java
-var response = ExceptionalSupplier.of(() -> fetchData())
-    .with(ex -> log.warn("fetch failed", ex))
+final ExceptionalResponse<Data> response = ExceptionalSupplier.of(() -> fetchData())
     .execute();
 ```
 
@@ -61,14 +63,14 @@ Do not catch `IOException` here. If this site is a documented exception, say why
 ```
 
 **Behavior:**
-- Includes intent id, severity, symbol, GAV, snippet.
+- Includes intent id, severity, symbol, GAV, primary snippet.
 - Posts via GitLab MR discussions API on the offending line when the diff position is available; otherwise a single MR note listing files.
 
-### FR4: Severity handling (M6 vs M7)
+### FR4: Severity handling
 
 **Behavior:**
-- M6: `required` and `available` both comment. Job exits 0 unless `--fail-on required` is set.
-- M7+: `--fail-on required` may be enabled per group. Job exits 1 if a required match remains.
+- First rollout: `required` and `available` both comment. Job exits 0 unless `--fail-on required` is set.
+- Later: `--fail-on required` may be enabled per group.
 
 ### FR5: Allowlist
 
@@ -83,17 +85,11 @@ src/main/java/com/example/legacy/OldReader.java:file_to_optional_string
 - File + intent id pairs suppress comment and failure.
 - Allowlist hits are logged. They are not silent.
 
-### FR6: Index fetch
-
-**Behavior:**
-- Job calls `axiom cache refresh` or curls the published `index.yaml`.
-- Pin available via `AXIOM_INDEX_URL` CI variable.
-
 ## Non-Functional Requirements
 
 ### NFR1: Runtime
-- Same `axiom` CLI image or jar on the runner.
-- GitLab token: `CI_JOB_TOKEN` for notes if permissions allow; otherwise a project access token stored as CI variable `AXIOM_GITLAB_TOKEN`.
+- Same `axiom` CLI on the runner.
+- GitLab token as needed for notes.
 
 ### NFR2: Time
 - Scan of a typical MR (≤ 30 files) under 30 seconds after index is cached.
@@ -104,11 +100,9 @@ src/main/java/com/example/legacy/OldReader.java:file_to_optional_string
 ## Package Structure
 
 ```text
-gitlab-ci/
+gitlab-ci/                 # later
 ├── axiom-lint.yml
 └── README.md
-
-cli/.../LintDiffCommand.java
 ```
 
 ## Test Coverage
@@ -119,16 +113,3 @@ cli/.../LintDiffCommand.java
    - `allowlistSuppresses()`
    - `availableDoesNotFailByDefault()`
    - `requiredFailsWhenFlagSet()`
-
-## Example Usage
-
-```yaml
-# axiom-lint.yml (excerpt)
-axiom-lint-diff:
-  stage: test
-  rules:
-    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
-  script:
-    - axiom cache refresh
-    - axiom lint-diff --diff "$CI_MERGE_REQUEST_DIFF_FILE" --format gitlab
-```

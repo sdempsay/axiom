@@ -13,7 +13,12 @@ intents:
     blessed:
       symbol: org.dempsay.utils.exceptional.api.ExceptionalSupplier.of
       kind: method
-    snippetRef: examples/ExceptionalSupplier.java
+    snippetRef: exceptional/ExceptionalSupplier.java
+    snippets:
+      - ref: exceptional/ExceptionalSupplier.java
+        role: primary
+      - ref: exceptional/ExceptionalSupplierChain.java
+        role: secondary
     triggers:
       - IOException
       - SQLException

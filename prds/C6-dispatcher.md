@@ -2,6 +2,8 @@
 
 ## Project: Axiom C6 — Consumer dispatcher
 
+**Status: deferred.** Not in the pilot. Kept so the 15-line contract is not invented later from memory.
+
 ## Overview
 
 The only Axiom text that belongs in every consuming repository. Tells humans and agents to query the catalog. Does not contain the catalog.
@@ -38,7 +40,7 @@ This file is not the catalog. The catalog is the lookup result.
 **Behavior:**
 - Source of truth file: `AGENTS.md` section as above.
 - `CLAUDE.md` contains `@AGENTS.md` or the same section if the repo does not use `AGENTS.md`.
-- Other agent files (Cursor, Gemini) symlink or copy `AGENTS.md`. Do not fork wording.
+- Other agent files (Cursor, Gemini, Grok) symlink or copy `AGENTS.md`. Do not fork wording.
 
 ### FR3: Template distribution
 
@@ -46,18 +48,17 @@ This file is not the catalog. The catalog is the lookup result.
 
 ```text
 dispatcher/AGENTS.section.md
-archetype: src/main/resources/archetype-resources/AGENTS.md
 ```
 
 **Behavior:**
-- Maven archetype and GitLab repo template include the section.
-- Existing repos get a one-shot MR from platform, not a required rewrite of the rest of `AGENTS.md`.
+- Maven archetype / repo template include the section when this work starts.
+- Existing repos get a one-shot MR, not a required rewrite of the rest of `AGENTS.md`.
 
 ### FR4: Exceptional and other required intents
 
 **Behavior:**
 - Required intents are not inlined in the dispatcher after Axiom lookup works.
-- Until MCP/CLI are available in a repo, a temporary inlined snippet is allowed. It must be removed in the MR that adds the CI include.
+- Until MCP/CLI are available in a repo, a temporary inlined snippet is allowed.
 
 ### FR5: Negative requirement
 
@@ -71,12 +72,12 @@ archetype: src/main/resources/archetype-resources/AGENTS.md
 - Dispatcher section ≤ 20 lines.
 
 ### NFR2: Stability
-- Wording changes go through `platform/axiom`. Consuming repos pull, they do not edit.
+- Wording changes go through `sdempsay/axiom`. Consuming repos pull, they do not edit.
 
 ## Package Structure
 
 ```text
-dispatcher/
+dispatcher/          # later, likely in the umbrella or axiom-plugin
 ├── AGENTS.section.md
 ├── CLAUDE.import.md
 └── README.md

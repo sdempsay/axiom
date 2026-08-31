@@ -2,9 +2,11 @@
 
 ## Project: Axiom C9 — Gap workflow
 
+Pilot: local files on the `axiom-mcp` host. GitHub issues are later.
+
 ## Overview
 
-How a catalog miss becomes an issue, an experiment, and either a new intent row or a documented “does not exist.”
+How a catalog miss becomes a recorded assumption, then an experiment, then either a new intent row or a documented “does not exist.”
 
 ## Purpose
 
@@ -26,24 +28,38 @@ asker: agent|human
 ```
 
 **Behavior:**
-- Produced by `axiom gap` and MCP `catalog_gap`.
+- Produced by `axiom gap` and MCP/HTTP `catalog_gap`.
 - `job` required. Other fields optional but recommended.
 
-### FR2: Issue creation
+### FR2: Local persistence (pilot)
 
 **API:**
 
 ```text
-GitLab project: platform/axiom-catalog
+$AXIOM_DATA/gaps/<timestamp>-<slug>.yaml
+```
+
+**Behavior:**
+- Writes the FR1 record plus index `generatedAt` if an index exists.
+- Returns the file path.
+- Does not open GitHub or GitLab issues in the pilot.
+- If no write token / GitHub is configured later, keep this as the fallback.
+
+### FR3: Issue creation (later)
+
+**API:**
+
+```text
+GitHub: sdempsay/axiom-mcp
 labels: gap, needs-triage
 ```
 
 **Behavior:**
 - Title: `gap: <job>`.
-- Body uses template fields from FR1 plus index version / `generatedAt`.
-- Assignee: catalog owners. Not the asking service team, unless they own a library.
+- Body uses template fields from FR1.
+- Assignee: catalog owners.
 
-### FR3: Triage states
+### FR4: Triage states (process, later)
 
 **API:**
 
@@ -54,63 +70,54 @@ needs-triage → rejected-local-clone
 ```
 
 **Behavior:**
-- `exists`: search or test found a blessed symbol. Action: add or fix the intent row in the owning library catalog, bump, re-aggregate.
-- `does-not-exist`: experiment found nothing. Action: either implement in the owning commons library and publish an intent, or close as out of scope with a written reason.
+- `exists`: search or test found a blessed symbol. Action: add or fix the intent row in the owning library catalog, bump, re-add GAV.
+- `does-not-exist`: experiment found nothing. Action: implement in the owning commons library or close as out of scope with a written reason.
 - `rejected-local-clone`: a local helper is not acceptable; caller must wait for or contribute the commons method.
 
-### FR4: Promotion rule
+### FR5: Promotion rule
 
 **Behavior:**
 - A new intent row cannot merge without: blessed symbol that exists in a published artifact, snippet from a test or example, at least one trigger, and an owner repo.
 - Model-written YAML without a symbol in source is invalid.
-- `severity: required` additionally needs platform approver review.
+- `severity: required` additionally needs a human approver.
 
-### FR5: Experiment log
+### FR6: Experiment log
 
 **API:**
 
 ```markdown
 ## Experiment
 - axiom search hex → no hit
-- repo search decodeHex → org.company.commons.Bytes.decodeHex
-- test: Bytes.decodeHex("0a") == new byte[]{10}
+- repo search decodeHex → …blessed symbol…
 ```
 
 **Behavior:**
-- Issue body or a follow-up comment records the search and any test.
+- Gap file or a follow-up records the search and any test.
 - That record is the experiment that promotes the assumption to a fact.
-
-### FR6: Feedback to the caller
-
-**Behavior:**
-- When the row is published, comment on the gap issue with `axiom get <id>` output.
-- No requirement to auto-close the consumer MR.
 
 ## Non-Functional Requirements
 
 ### NFR1: Latency of process
-- Triage SLA is organizational, not mechanical. Tooling only creates the issue.
+- Triage SLA is organizational, not mechanical. Tooling only records the gap.
 
 ### NFR2: Access
-- Any developer or CI token that can open an issue in `platform/axiom-catalog` can file a gap.
+- Pilot: anyone who can reach `axiom-mcp` can file a gap.
 - Merge of catalog rows stays with library owners.
 
 ## Package Structure
 
 ```text
-catalog-project/
-├── ISSUE_TEMPLATE/gap.md
-└── README.md
+axiom-mcp/.../GapStore.java
+axiom-mcp/catalog-project/ISSUE_TEMPLATE/gap.md   # later
 ```
 
 ## Test Coverage
 
 1. **GapCommandTest**
-   - `createsIssueWhenTokenPresent()`
-   - `printsTemplateWhenTokenMissing()`
+   - `writesLocalFile()`
    - `requiresJob()`
 
-2. **PromotionReviewTest** (docs/process test, checklist)
+2. **PromotionReviewTest** (docs/process checklist)
    - `rowWithoutSymbolRejected()`
    - `requiredNeedsApprover()`
 
