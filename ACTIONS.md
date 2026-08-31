@@ -2,6 +2,7 @@
 
 ## 2026-08-31
 
+- Versioning: latest tag `x.y.z` → SNAPSHOT `x.(y+1).0-SNAPSHOT`, new `@since` `x.y.(z+1)`. Exceptional tag `1.0.9` stays on `1.1.0-SNAPSHOT`; `@since` would be `1.0.10`. Axiom has no tag; `@since 1.0.0`.
 - Bumped `axiom-mcp` to master after lookup/search/get (#4).
 - Bumped `axiom-mcp` to master after HTTP store (#1) and GAV add (#2). Bumped `axiom-plugin` to master after embed/harvest (#4) and `@since 1.0.0`.
 - First public release is 1.0.0; Javadoc `@since` is `1.0.0` (not `0.1.0` / SNAPSHOT).

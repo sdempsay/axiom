@@ -32,3 +32,4 @@ Requirements learned while reconciling the original zip with this org. Canonical
 | U26 | Official MCP Java SDK: do not depend on `io.modelcontextprotocol.sdk:mcp` (Jackson 3). Use `mcp-core` + `mcp-json-jackson2` so Jackson stays 2.x (`2.18.2`). HTTP in the pilot is JDK `HttpServer`. |
 | U27 | First public release of Axiom artifacts is **1.0.0**. Javadoc `@since` is `1.0.0`, not `0.1.0` and not the Maven SNAPSHOT version. |
 | U28 | Catalog add resolves from multiple Maven remotes: `--repo` / `AXIOM_REPOS`, `~/.m2/settings.xml` active-profile repositories (with matching `<server>` credentials), then Maven Central. Not Central-only. |
+| U29 | Version from **latest git tag**, not the SNAPSHOT string. After tag `x.y.z`, Maven SNAPSHOT is `x.(y+1).0-SNAPSHOT` (always `.0`). New Javadoc `@since` is `x.y.(z+1)`. Exceptional tag `1.0.9` → `1.1.0-SNAPSHOT` / `@since 1.0.10`. Axiom has no tag yet; first public release `@since 1.0.0`. |

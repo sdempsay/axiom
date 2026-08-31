@@ -53,9 +53,16 @@ code-review diff --base origin/master --no-chat
 
 When `axiom lookup` / MCP works, **this umbrella and its submodules are the first consuming repos** — dispatcher text in `AGENTS.md` here. Tracked as [axiom#2](https://github.com/sdempsay/axiom/issues/2). Until then, do not pretend catalog lookup exists.
 
-## Javadoc `@since`
+## Versioning (from git tags)
 
-First public release is **1.0.0**. New types and methods use `@since 1.0.0`, not `0.1.0` and not the Maven SNAPSHOT version.
+Read the **latest tag**, not the SNAPSHOT in the POM.
+
+- **Maven SNAPSHOT** after tag `x.y.z` is `x.(y+1).0-SNAPSHOT` (always ends in `.0`).
+- **Javadoc `@since`** for new APIs is `x.y.(z+1)` from that same tag.
+
+Example: tag `1.0.9` → POM `1.1.0-SNAPSHOT`, new `@since 1.0.10`.
+
+Axiom has no release tag yet. First public release is **1.0.0**, so Axiom `@since` is `1.0.0` (not `0.1.0` and not the SNAPSHOT).
 
 ## Exceptional
 
