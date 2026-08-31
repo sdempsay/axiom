@@ -1,24 +1,27 @@
-# TODO
+# TODO.md
 
-| ID | Task | Status |
+Cross-cutting backlog for the [Axiom umbrella](https://github.com/sdempsay/axiom).
+
+**Where work lives**
+
+| Kind | Repo | Tracker |
 |---|---|---|
-| T0 | Interview mismatches; rewrite umbrella docs; sketch plugin/mcp dirs | complete |
-| T1 | C1: JSON Schema + `axiom-model` in `axiom-plugin` | pending |
-| T2 | C1: Exceptional example catalog validates (of+execute + chain example) | pending |
-| T3 | C2: `axiom-maven-plugin` validate, stamp version, attach `agent-catalog` | pending |
-| T4 | C2: embed `META-INF/axiom/catalog.yaml`; optional annotation harvest off | pending |
-| T5 | C3/C4: `axiom-mcp` HTTP+MCP process, local file store | pending |
-| T6 | C3: add catalog by Maven GAV (Maven Resolver fetch of classifier) | pending |
-| T7 | C3: remove catalog by GAV | pending |
-| T8 | C4: `catalog_lookup` / `catalog_search` / `catalog_get` | pending |
-| T9 | C5: `axiom` CLI against the same store (`lookup`, `search`, `get`, `validate`, `add`, `remove`, `gap`) | pending |
-| T10 | C9: `catalog_gap` writes local files | pending |
-| T11 | M4: Exceptional `catalog.yaml` + plugin + CI POST | pending |
-| T12 | Promote `axiom-plugin` and `axiom-mcp` to real GitHub remotes + submodules | complete |
-| T12a | Pre-commit `code-review` dogfood on Java/POM | complete |
-| T12b | M3.5: dispatcher + catalog lookup in this repo (first Axiom consumer) | pending |
-| T12c | Extend code-review with `--fail-on REQUEST_CHANGES` (review-pipeline) | pending |
-| T13 | C6 consumer dispatcher (org-wide) | deferred |
-| T14 | C7 GitLab lint-diff | deferred |
-| T15 | C8 required detectors | deferred |
-| T16 | C9 GitHub issues for gaps; write-API auth | deferred |
+| Cross-cutting (docs, onboard, dogfood, later org rollout) | this repo | this file + [axiom issues](https://github.com/sdempsay/axiom/issues) |
+| Schema, annotations, Maven plugin | `axiom-plugin` | [plugin TODO](axiom-plugin/TODO.md) + [plugin issues](https://github.com/sdempsay/axiom-plugin/issues) |
+| Live HTTP+MCP+CLI | `axiom-mcp` | [mcp TODO](axiom-mcp/TODO.md) + [mcp issues](https://github.com/sdempsay/axiom-mcp/issues) |
+
+**Backlog sync:** Pending work is a GitHub Issue. This file is a thin index (ID, status, issue link) for offline session start. Details live on the issue. When shipping: `Fixes #N` in the PR → close issue → mark row `complete` here. Never delete a row.
+
+## Cross-cutting
+
+| ID | Task | Status | Issue |
+|---|---|---|---|
+| T0 | Interview mismatches; rewrite umbrella docs; sketch plugin/mcp dirs | complete | — |
+| T11 | M4: Exceptional `catalog.yaml` + plugin + CI POST | pending | [#1](https://github.com/sdempsay/axiom/issues/1) |
+| T12 | Promote `axiom-plugin` and `axiom-mcp` to GitHub remotes + submodules | complete | — |
+| T12a | Pre-commit `code-review` dogfood on Java/POM | complete | — |
+| T12b | M3.5: dispatcher + catalog lookup in this repo (first Axiom consumer) | pending | [#2](https://github.com/sdempsay/axiom/issues/2) |
+| T12c | Extend code-review with `--fail-on REQUEST_CHANGES` | pending | [agentic-review-tool#6](https://github.com/sdempsay/agentic-review-tool/issues/6) |
+| T13 | C6 consumer dispatcher (org-wide) | deferred | [#3](https://github.com/sdempsay/axiom/issues/3) |
+| T14 | C7 GitLab lint-diff | deferred | [#4](https://github.com/sdempsay/axiom/issues/4) |
+| T15 | C8 required detectors | deferred | [#5](https://github.com/sdempsay/axiom/issues/5) |

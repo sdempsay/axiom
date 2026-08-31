@@ -16,7 +16,7 @@ git submodule update --init --recursive
 | [PLAN.md](PLAN.md) | Execution plan by phase and repo |
 | [PRD-updated.md](PRD-updated.md) | Requirements learned after the original zip |
 | [prds/](prds/) | One PRD per actionable component |
-| [TODO.md](TODO.md) | Work tracking |
+| [TODO.md](TODO.md) | Cross-cutting index (plugin/MCP TODOs live in those repos) |
 | [ACTIONS.md](ACTIONS.md) | Work log |
 
 | Directory | GitHub | Job |

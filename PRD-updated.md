@@ -28,3 +28,4 @@ Requirements learned while reconciling the original zip with this org. Canonical
 | U22 | After M3 (lookup works), **this repo is the first Axiom consumer** (dispatcher + `axiom catalog add` Exceptional). Org-wide C6/C7/C8 stay later. |
 | U23 | First-catalog Exceptional version is **1.0.9** (was 1.0.7 in the original zip). |
 | U24 | GitHub remotes: https://github.com/sdempsay/axiom (umbrella), https://github.com/sdempsay/axiom-plugin, https://github.com/sdempsay/axiom-mcp. |
+| U25 | Hybrid backlog (same as review-pipeline): GitHub Issues hold AC; `TODO.md` is a thin index. **Cross-cutting issues on sdempsay/axiom. Plugin issues on axiom-plugin. MCP issues on axiom-mcp.** |

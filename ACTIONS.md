@@ -2,6 +2,7 @@
 
 ## 2026-08-31
 
+- Adopted review-pipeline hybrid tracker: `TODO.md` index + GitHub Issues. Cross-cutting issues on sdempsay/axiom; plugin T1–T4 on axiom-plugin; MCP T5–T10/T16 on axiom-mcp; T12c on agentic-review-tool#6.
 - Wired GitHub remotes: [sdempsay/axiom](https://github.com/sdempsay/axiom) umbrella with submodules [axiom-plugin](https://github.com/sdempsay/axiom-plugin) and [axiom-mcp](https://github.com/sdempsay/axiom-mcp).
 - Pinned Exceptional examples and PRD GAVs to 1.0.9.
 - Recorded dogfood requirements: pre-commit `code-review` on Java/POM now; this repo is the first Axiom consumer after M3 lookup. Hook lives in `hooks/pre-commit`; `bin/install-hooks` sets `core.hooksPath`.
