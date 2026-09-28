@@ -53,16 +53,19 @@ code-review diff --base origin/master --no-chat
 
 When `axiom lookup` / MCP works, **this umbrella and its submodules are the first consuming repos** — dispatcher text in `AGENTS.md` here. Tracked as [axiom#2](https://github.com/sdempsay/axiom/issues/2). Until then, do not pretend catalog lookup exists.
 
-## Versioning (from git tags)
+## Versioning (`@since` and SNAPSHOT)
 
-Read the **latest tag**, not the SNAPSHOT in the POM.
+The SNAPSHOT **minor is one ahead of the release line**. `1.1.0-SNAPSHOT` tracks `1.0.x`. Never use the POM SNAPSHOT as `@since`. Test classes do not need `@since`.
 
-- **Maven SNAPSHOT** after tag `x.y.z` is `x.(y+1).0-SNAPSHOT` (always ends in `.0`).
-- **Javadoc `@since`** for new APIs is `x.y.(z+1)` from that same tag.
+For new classes and methods:
 
-Example: tag `1.0.9` → POM `1.1.0-SNAPSHOT`, new `@since 1.0.10`.
+1. `git tag --sort=-v:refname | head -5` in the submodule.
+2. Note the POM version, e.g. `1.1.0-SNAPSHOT`. That snapshot minor is one ahead of the release line (`1.0`).
+3. Latest tag on that release line (e.g. `1.0.12`).
+4. `@since` = latest tag + 1 patch (e.g. `1.0.13`).
+5. If no tags exist on the release line yet, use `1.(x-1).0` (for `1.1.0-SNAPSHOT` → `@since 1.0.0`).
 
-Axiom has no release tag yet. First public release is **1.0.0**, so Axiom `@since` is `1.0.0` (not `0.1.0` and not the SNAPSHOT).
+Axiom SNAPSHOT is `1.1.0-SNAPSHOT` (not `0.1.0-SNAPSHOT`). No `1.0` tags yet, so `@since 1.0.0`.
 
 ## Exceptional
 

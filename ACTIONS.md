@@ -1,5 +1,9 @@
 # ACTIONS
 
+## 2026-09-28
+
+- SNAPSHOT is `1.1.0-SNAPSHOT` (tracks `1.0.x`, not `0.1.0-SNAPSHOT`). `@since` = latest `1.0` tag + 1 patch; no tags yet → `1.0.0`. Never use the SNAPSHOT as `@since`.
+
 ## 2026-08-31
 
 - Versioning: latest tag `x.y.z` → SNAPSHOT `x.(y+1).0-SNAPSHOT`, new `@since` `x.y.(z+1)`. Exceptional tag `1.0.9` stays on `1.1.0-SNAPSHOT`; `@since` would be `1.0.10`. Axiom has no tag; `@since 1.0.0`.
